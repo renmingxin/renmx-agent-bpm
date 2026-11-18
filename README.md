@@ -1,6 +1,6 @@
-# Flowline · 阶段 3
+# Flowline · 阶段 4
 
-当前主题：表单与运行工作台。这是逐阶段累加的教学快照，不是原开发时间线。
+当前主题：可视化设计器与发布。这是逐阶段累加的教学快照，不是原开发时间线。
 
 ## 启动
 
@@ -22,5 +22,6 @@ pnpm dev
 | 1    | 共享模型与纯引擎      | [阅读](docs/stage-01-domain-engine.md)     | `stage-1` |
 | 2    | PostgreSQL 与业务 API | [阅读](docs/stage-02-postgres-api.md)      | `stage-2` |
 | 3    | 表单与运行工作台      | [阅读](docs/stage-03-runtime-workbench.md) | `stage-3` |
+| 4    | 可视化设计器与发布    | [阅读](docs/stage-04-visual-designer.md)   | `stage-4` |
 
 先读本阶段文档再读代码，暂时不要从架构总图开始。当前快照只提供截至本章的功能。
