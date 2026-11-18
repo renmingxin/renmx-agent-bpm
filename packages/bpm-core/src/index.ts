@@ -1,2 +1,5 @@
-/** 阶段 0 的共享包占位；先验证包依赖与构建链路。 */
-export const COURSE_STAGE = 0;
+/** 共享包的唯一公共入口；前后端通过它依赖模型与引擎，不互相依赖。 */
+export * from './types';
+export * from './validation';
+export * from './engine';
+export * from './templates';

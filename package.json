@@ -15,7 +15,7 @@
     "dev": "pnpm --filter @bpm/core build && turbo dev",
     "build": "turbo build",
     "typecheck": "turbo typecheck",
-    "test": "pnpm typecheck",
+    "test": "pnpm --filter @bpm/core build && pnpm --filter @bpm/core test",
     "start": "pnpm --filter @bpm/core build && concurrently -k -n api,web \"pnpm --filter @bpm/api start\" \"pnpm --filter @bpm/web start\""
   },
   "devDependencies": {
