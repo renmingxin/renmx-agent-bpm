@@ -7,5 +7,6 @@
 - [阶段 2 · PostgreSQL 与业务 API](stage-02-postgres-api.md) · `stage-2`
 - [阶段 3 · 表单与运行工作台](stage-03-runtime-workbench.md) · `stage-3`
 - [阶段 4 · 可视化设计器与发布](stage-04-visual-designer.md) · `stage-4`
+- [阶段 5 · 并发验证与扩展边界](stage-05-tests-and-extension.md) · `stage-5`
 
 配置不明白时查 [配置指南](configuration.md)，重启时查 [启动说明](startup.md)。
