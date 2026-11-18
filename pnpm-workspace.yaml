@@ -1,0 +1,9 @@
+# apps 放可运行应用，packages 放共享包；workspace:* 总是引用本地包。
+packages:
+  - apps/*
+  - packages/*
+minimumReleaseAgeExclude:
+  - '@xyflow/react@13.0.2'
+allowBuilds:
+  # tsx 使用 esbuild 的平台二进制；只开放这一项依赖安装脚本。
+  esbuild: true

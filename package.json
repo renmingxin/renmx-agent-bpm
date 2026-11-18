@@ -1,0 +1,29 @@
+{
+  "name": "next-bpm",
+  "private": true,
+  "version": "0.1.0",
+  "packageManager": "pnpm@12.11.2",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "db:up": "docker compose up -d --wait",
+    "db:down": "docker compose down",
+    "db:logs": "docker compose logs -f postgres",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "dev": "pnpm --filter @bpm/core build && turbo dev",
+    "build": "turbo build",
+    "typecheck": "turbo typecheck",
+    "test": "pnpm typecheck",
+    "start": "pnpm --filter @bpm/core build && concurrently -k -n api,web \"pnpm --filter @bpm/api start\" \"pnpm --filter @bpm/web start\""
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "concurrently": "^9.2.1",
+    "prettier": "^3.7.3",
+    "tsx": "^4.20.6",
+    "turbo": "^2.6.1",
+    "typescript": "5.9.3"
+  }
+}

@@ -1,0 +1,11 @@
+# 依赖、编译缓存与构建结果由命令生成，不进入教学提交。
+node_modules/
+.next/
+.turbo/
+dist/
+*.tsbuildinfo
+# 本地连接配置、旧开发数据与截图/临时脚本不进入仓库。
+.env
+.env.local
+data/
+artifacts/

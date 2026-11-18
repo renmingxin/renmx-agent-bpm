@@ -1,0 +1,18 @@
+/* 最小课程页面样式，完整布局在运行态章节加入。 */
+body {
+  margin: 0;
+  background: #f7f8fb;
+  font-family: system-ui, sans-serif;
+  color: #253651;
+}
+main {
+  max-width: 760px;
+  margin: 100px auto;
+  padding: 30px;
+}
+h1 {
+  font-weight: 500;
+}
+a {
+  color: #4566e8;
+}

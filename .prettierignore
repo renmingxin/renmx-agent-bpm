@@ -1,0 +1,9 @@
+# 依赖、自动生成文件和运行数据无需格式化。
+node_modules
+dist
+.next
+.turbo
+data
+artifacts
+pnpm-lock.yaml
+next-env.d.ts
