@@ -1,0 +1,203 @@
+/* 流程列表、筛选器和流程卡片。 */
+.process-page-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 18px;
+  margin: 30px 0;
+}
+.segmented {
+  display: flex;
+  border: 1px solid #e2e7f0;
+  border-radius: 7px;
+  background: #edf0f6;
+  padding: 3px;
+  gap: 3px;
+}
+.segmented button {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: #939db1;
+  font-size: 11px;
+  padding: 8px 13px;
+  border-radius: 5px;
+}
+.segmented button.active {
+  background: white;
+  color: #586fbc;
+  box-shadow: 0 1px 4px #2238530a;
+}
+.process-filter {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.sr-only-label > select {
+  border: 1px solid #e1e6ef;
+  border-radius: 6px;
+  background: white;
+  color: #8692a9;
+  font-size: 11px;
+  padding: 8px;
+}
+.section-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.section-intro > span {
+  color: #a1adc1;
+  font-size: 9px;
+  letter-spacing: 1.4px;
+}
+.section-intro > small {
+  color: #aab4c4;
+  font-size: 10px;
+}
+.process-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.process-card {
+  background: white;
+  border: 1px solid #e6eaf1;
+  border-radius: 10px;
+  padding: 23px 23px 0;
+  transition:
+    box-shadow 0.15s,
+    border-color 0.15s;
+}
+.process-card:hover {
+  box-shadow: 0 5px 20px #263d5c07;
+  border-color: #d8dfed;
+}
+.process-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.process-category {
+  font-size: 9px;
+  color: #a5afc0;
+  letter-spacing: 1px;
+}
+.process-card h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-top: 4px;
+}
+.process-card > p {
+  color: #a2aabb;
+  font-size: 10px;
+  margin-top: 8px;
+  min-height: 37px;
+  line-height: 1.8;
+}
+.process-metrics {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  font-size: 9px;
+  color: #9ba7bc;
+  padding: 20px 0 19px;
+}
+.process-metrics > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.process-metrics .draft-indicator {
+  margin-left: auto;
+  color: #d2a168;
+  font-size: 8px;
+}
+.process-card-bottom {
+  border-top: 1px solid #eef1f6;
+  padding: 14px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.process-card-bottom > small {
+  color: #b0b8c7;
+  font-size: 9px;
+}
+.process-card-bottom > div {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.process-card-bottom .icon-button {
+  height: 26px;
+  width: 26px;
+}
+.create-card {
+  min-height: 280px;
+  border: 1px dashed #d4dce9;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f7f9fd;
+  color: #9ba9c5;
+}
+.create-card > span {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  background: #edf1fa;
+  border-radius: 13px;
+  margin-bottom: 17px;
+}
+.create-card strong {
+  font-size: 12px;
+  font-weight: 400;
+  color: #8a9bb9;
+}
+.create-card p {
+  font-size: 10px;
+  color: #aebbd1;
+  margin-top: 7px;
+}
+.create-card:hover {
+  border-color: #9aaee5;
+  background: #f0f4ff;
+}
+.process-tip {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-top: 30px;
+  padding: 22px 23px;
+  border: 1px solid #e7ebf4;
+  border-radius: 8px;
+  background: #f2f5fb;
+  color: #8a9bb9;
+}
+.process-tip > span {
+  height: 44px;
+  width: 44px;
+  background: #e9eef9;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: #9fb0d0;
+  flex-shrink: 0;
+}
+.process-tip strong {
+  font-size: 12px;
+  font-weight: 400;
+}
+.process-tip p {
+  font-size: 10px;
+  color: #a4b0c6;
+  margin-top: 4px;
+}

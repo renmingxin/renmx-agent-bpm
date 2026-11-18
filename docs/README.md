@@ -5,5 +5,6 @@
 - [阶段 0 · Monorepo 与启动链路](stage-00-workspace.md) · `stage-0`
 - [阶段 1 · 共享模型与纯引擎](stage-01-domain-engine.md) · `stage-1`
 - [阶段 2 · PostgreSQL 与业务 API](stage-02-postgres-api.md) · `stage-2`
+- [阶段 3 · 表单与运行工作台](stage-03-runtime-workbench.md) · `stage-3`
 
 配置不明白时查 [配置指南](configuration.md)，重启时查 [启动说明](startup.md)。

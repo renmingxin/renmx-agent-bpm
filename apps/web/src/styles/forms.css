@@ -1,0 +1,267 @@
+/* 原生弹窗、表单控件、反馈与空状态。 */
+.modal {
+  border: 1px solid #e6eaf3;
+  border-radius: 15px;
+  width: min(480px, calc(100vw - 32px));
+  padding: 27px;
+  background: white;
+  color: var(--ink);
+  box-shadow: 0 30px 90px #15224322;
+  max-height: 90dvh;
+  overflow: auto;
+}
+.modal::backdrop {
+  background: #18213f44;
+  backdrop-filter: blur(4px);
+}
+.modal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+.modal-heading h2 {
+  font-size: 20px;
+  font-weight: 500;
+}
+.modal-heading .eyebrow {
+  font-size: 8px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 22px;
+  min-width: 0;
+}
+.field > span {
+  font-size: 11px;
+  color: #6c7890;
+}
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1px solid #9ca7b8;
+  border-radius: 6px;
+  background: white;
+  min-height: 43px;
+  font-family: inherit;
+  font-size: 16px;
+  transition: border-color 0.15s;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: #b2bac9;
+  font-size: 12px;
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: #6c87e5;
+}
+.field input:user-invalid,
+.field textarea:user-invalid,
+.field select:user-invalid {
+  border-color: #da777d;
+}
+.field textarea {
+  resize: vertical;
+  line-height: 1.65;
+}
+.field > small {
+  color: #a4afc2;
+  font-size: 9px;
+}
+.field.compact {
+  margin-bottom: 18px;
+  gap: 7px;
+}
+.field.compact > span {
+  font-size: 10px;
+}
+.field.compact input,
+.field.compact textarea,
+.field.compact select {
+  padding: 8px 10px;
+  min-height: 37px;
+  font-size: 12px;
+  border-color: #b0b9ca;
+}
+.field.compact input:focus,
+.field.compact textarea:focus,
+.field.compact select:focus {
+  border-color: #6c87e5;
+}
+.template-choices {
+  border: 0;
+  margin: 0 0 20px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+.template-choices legend {
+  font-size: 11px;
+  color: #7e8ba2;
+  padding: 0;
+  margin-bottom: 10px;
+}
+.template-choice {
+  padding: 13px 10px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  border: 1px solid #e0e5ef;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.template-choice.selected {
+  background: #f5f7ff;
+  border-color: #b9c6f2;
+}
+.template-choice input {
+  accent-color: var(--blue);
+  width: 13px;
+  height: 13px;
+}
+.template-choice > span > strong {
+  font-size: 11px;
+  font-weight: 500;
+  display: block;
+}
+.template-choice > span > small {
+  font-size: 8px;
+  color: #a2adc1;
+  display: block;
+  margin-top: 4px;
+}
+.template-choice > svg {
+  margin-left: auto;
+  color: var(--blue);
+}
+.guide-steps {
+  margin: 0;
+  padding-left: 25px;
+  counter-reset: guide;
+}
+.guide-steps li {
+  padding: 0 0 23px 6px;
+  color: #91a2c8;
+}
+.guide-steps strong {
+  font-size: 13px;
+  color: #526481;
+  font-weight: 500;
+}
+.guide-steps p {
+  color: #99a5b9;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.9;
+}
+.help-modal .info-note {
+  margin: 0 0 23px;
+}
+.info-note {
+  padding: 12px 13px;
+  background: #f4f7fc;
+  color: #94a3bc;
+  border-radius: 6px;
+  font-size: 10px;
+  line-height: 1.9;
+}
+.form-error {
+  font-size: 11px;
+  color: #cd606a;
+  line-height: 1.8;
+  margin: 12px 0;
+}
+.form-error.padded {
+  padding: 0 28px;
+}
+.toast {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  background: #24334d;
+  color: white;
+  box-shadow: 0 8px 30px #18284625;
+  border-radius: 9px;
+  padding: 10px 13px 10px 18px;
+  font-size: 12px;
+}
+.toast > svg {
+  color: #8fd7b9;
+}
+.toast .icon-button {
+  color: #aab6ca;
+}
+.toast .icon-button:hover {
+  background: #43506b;
+}
+.loading,
+.error-state,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 75px 25px;
+  color: #a4afc2;
+  gap: 12px;
+}
+.loading {
+  min-height: 50vh;
+  font-size: 12px;
+}
+.error-state {
+  min-height: 50vh;
+  color: #a1aec5;
+}
+.error-state h3,
+.empty-state h3 {
+  font-weight: 400;
+  font-size: 14px;
+  color: #788ba9;
+}
+.error-state p {
+  font-size: 12px;
+  max-width: 600px;
+}
+.error-state button {
+  margin-top: 8px;
+}
+.empty-state {
+  padding: 55px 20px;
+}
+.empty-state > span {
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: #f3f6fc;
+  display: grid;
+  place-items: center;
+  margin-bottom: 5px;
+  color: #a8b9d4;
+}
+.empty-state p {
+  color: #aab5c9;
+  font-size: 11px;
+}
+.spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

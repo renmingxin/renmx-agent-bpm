@@ -1,0 +1,231 @@
+/* 全局设计变量、基础排版和通用按钮/状态标签。 */
+:root {
+  --blue: #4566e8;
+  --blue-dark: #3252d3;
+  --ink: #202b43;
+  --muted: #8b93a5;
+  --line: #e9ecf2;
+  --bg: #f7f8fb;
+  --green: #299b7f;
+  --sidebar: 218px;
+  --font: 'DM Sans', 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color-scheme: light;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 13px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+a {
+  text-decoration: none;
+  color: inherit;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+button {
+  border: 0;
+  background: none;
+}
+button,
+a,
+input,
+textarea,
+select,
+summary {
+  outline-offset: 4px;
+}
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--blue);
+}
+input,
+textarea,
+select {
+  font-size: max(1rem, 1em);
+}
+svg {
+  flex-shrink: 0;
+  vertical-align: middle;
+}
+em {
+  font-style: normal;
+  color: #df706d;
+}
+::selection {
+  background: #dce4ff;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.full {
+  width: 100%;
+}
+.muted {
+  color: var(--muted);
+}
+.nowrap {
+  white-space: nowrap;
+}
+.align-right {
+  text-align: right !important;
+}
+.dot-separator {
+  margin: 0 7px;
+  color: #bdc3cf;
+}
+.live-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background: #4daf94;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 39px;
+  padding: 8px 15px;
+  background: #fff;
+  border: 1px solid #dfe4ee;
+  border-radius: 7px;
+  font-weight: 500;
+  font-size: 12px;
+  white-space: nowrap;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
+}
+.button:hover {
+  background: #f4f6fc;
+}
+.button.primary {
+  color: #fff;
+  background: var(--blue);
+  border-color: var(--blue);
+  box-shadow: 0 3px 6px #4566e818;
+}
+.button.primary:hover {
+  background: var(--blue-dark);
+  border-color: var(--blue-dark);
+}
+.button.danger-outline {
+  color: #cd5b61;
+  border-color: #efd2d5;
+}
+.button.danger-outline:hover {
+  background: #fff4f4;
+}
+.icon-button {
+  display: inline-flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: #929aac;
+  flex-shrink: 0;
+}
+.icon-button:hover {
+  background: #eef1f7;
+  color: var(--ink);
+}
+.text-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--blue);
+  padding: 5px 0;
+  white-space: nowrap;
+}
+.text-button:hover {
+  color: var(--blue-dark);
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 1.7px;
+  font-weight: 600;
+  color: #919aae;
+  display: block;
+  margin-bottom: 5px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border-radius: 5px;
+  padding: 3px 7px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.5;
+}
+.badge.running {
+  background: #eef3ff;
+  color: #5578d8;
+}
+.badge.completed {
+  background: #ecf7f2;
+  color: #369c7c;
+}
+.badge.rejected {
+  background: #fff0ee;
+  color: #d07669;
+}
+.badge.draft {
+  background: #f1f2f6;
+  color: #9299a7;
+}
+.status-dot {
+  height: 4px;
+  width: 4px;
+  background: currentColor;
+  border-radius: 50%;
+}

@@ -1,9 +1,23 @@
-/** 最小根布局：先理解路由入口，复杂外壳在运行态章节加入。 */
+/**
+ * App Router 根布局：设置页面元信息与中文语言，装配全局 Provider 和应用外壳。
+ * 布局保持 Server Component；需要交互的部分通过客户端组件边界接入。
+ */
+import type { Metadata } from 'next';
+import { AppProvider, Shell } from '@/components/shell';
 import './globals.css';
-export default function Layout({ children }: { children: React.ReactNode }) {
+
+export const metadata: Metadata = {
+  title: '流序 Flowline · 工作流，让协作有序',
+  description: '可视化流程设计、动态表单与审批工作台',
+};
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="zh-CN">
-      <body>{children}</body>
+      <body>
+        <AppProvider>
+          <Shell>{children}</Shell>
+        </AppProvider>
+      </body>
     </html>
   );
 }
