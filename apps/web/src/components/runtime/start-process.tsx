@@ -6,14 +6,15 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, Send, ShieldCheck } from 'lucide-react';
-import { type Instance, type Workflow } from '@bpm/core';
+import { type Instance, type Workflow, type FormData as BpmData } from '@bpm/core';
 import { json, useApp, useRemote } from '@/lib/client';
 import { collectFields, FormFields } from '../form-fields';
 import { ErrorState, Loading, ProcessIcon } from '../ui';
 
 import { RoutePreview } from './route-preview';
+import { AssistantPanel } from '../assistant/assistant-panel';
 export function StartProcess() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
@@ -21,6 +22,14 @@ export function StartProcess() {
   const { data: wf, error, loading, reload } = useRemote<Workflow>(`/workflows/${id}`);
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [draft, setDraft] = useState<BpmData>({});
+  const [draftTitle, setDraftTitle] = useState<string | null>(null);
+  useEffect(() => {
+    setDraft({});
+    setDraftTitle(null);
+    setSubmitError('');
+    setBusy(false);
+  }, [id, user.id]);
   if (loading) return <Loading />;
   if (error || !wf) return <ErrorState error={error} retry={reload} />;
   const published = wf.versions.at(-1);
@@ -95,14 +104,22 @@ export function StartProcess() {
                   name="_title"
                   required
                   maxLength={100}
-                  defaultValue={
-                    definition.name.endsWith('申请') ? definition.name : `${definition.name}申请`
+                  value={
+                    draftTitle ??
+                    (definition.name.endsWith('申请') ? definition.name : `${definition.name}申请`)
                   }
+                  onChange={(e) => setDraftTitle(e.target.value)}
                   placeholder="给这份申请一个清晰的标题"
                 />
               </label>
               <div className="form-separator" />
-              <FormFields fields={definition.fields} />
+              <FormFields
+                fields={definition.fields}
+                values={draft}
+                onValueChange={(key, value) =>
+                  setDraft((previous) => ({ ...previous, [key]: value }))
+                }
+              />
             </div>
             {submitError && (
               <div className="form-error padded" role="alert">
@@ -122,6 +139,17 @@ export function StartProcess() {
           </form>
         </section>
         <div>
+          <AssistantPanel
+            key={`${id}-${user.id}`}
+            workflowId={id}
+            data={draft}
+            fields={definition.fields}
+            onFill={(result) => {
+              setDraft((previous) => ({ ...previous, ...result.fields }));
+              if (result.title) setDraftTitle(result.title);
+              notify('候选字段已填入，请核对后再提交申请');
+            }}
+          />
           <RoutePreview definition={definition} />
           <div className="runtime-tip">
             <ShieldCheck size={19} />

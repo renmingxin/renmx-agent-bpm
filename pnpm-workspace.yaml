@@ -4,6 +4,7 @@ packages:
   - packages/*
 minimumReleaseAgeExclude:
   - '@xyflow/react@13.0.2'
+  - '@langchain/core@1.4.2'
 allowBuilds:
   # tsx 使用 esbuild 的平台二进制；只开放这一项依赖安装脚本。
   esbuild: true

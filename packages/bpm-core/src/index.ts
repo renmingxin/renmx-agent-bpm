@@ -3,3 +3,5 @@ export * from './types';
 export * from './validation';
 export * from './engine';
 export * from './templates';
+export * from './assistant';
+export * from './assistant-checks';

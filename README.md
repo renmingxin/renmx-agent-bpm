@@ -4,13 +4,15 @@
 
 技术栈：**Next.js + React + @xyflow/react + NestJS + PostgreSQL 18 + Docker Compose + pnpm workspace + Turborepo + TypeScript**。
 
+智能助手：**LangGraph + LangChain**，支持 Ollama / OpenAI 兼容模型，以及制度 RAG。
+
 ## 先体验，再读源码
 
 需要 Node.js 24+、pnpm 12.11.2，以及运行中的 Docker Desktop。
 
 ```powershell
 pnpm install
-Copy-Item .env.example .env
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
 pnpm db:up
 pnpm dev
 ```
@@ -37,6 +39,12 @@ pnpm dev
 
 这是本地教学版。身份切换是演示机制，正式使用前需要接入认证/授权。引擎支持串行审批与数值条件 DAG，不包含并行会签、退回重提、BPMN 导入导出或多租户。
 
+## 智能审批助手
+
+已实现审批意见草稿、路线解释、自然语言填单、审批制度 RAG 与异常字段检测。模型 provider 和名称可在页面切换，服务端地址与密钥配置在根 `.env`。制度支持 TXT、Markdown、文本 PDF、DOCX 导入，默认词项检索，也可接 Ollama / OpenAI Embedding 做混合检索。
+
+先读 [助手运行与模型配置](docs/agent/setup.md)，再读 [stage-6 学习文档](docs/stage-06-approval-assistant.md)。[总体功能规划](docs/agent/README.md)中其他扩展仍是后续方案。助手只生成可核对的建议和候选值，提交申请、审批流转仍由人操作现有业务入口。
+
 ## 推荐阅读顺序
 
 先运行上面的完整链路，再从第 0 章开始。**不要一上来读架构文档**，先从一份申请如何经过代码建立直觉。
@@ -49,10 +57,11 @@ pnpm dev
 | [3](docs/stage-03-runtime-workbench.md)   | 表单与工作台          | 客户端边界、派生状态、动态表单      | 浏览器填写和审批     | `stage-3` |
 | [4](docs/stage-04-visual-designer.md)     | 可视化设计器          | 受控画布、handle、设计/运行分离     | 画图、配置表单、发布 | `stage-4` |
 | [5](docs/stage-05-tests-and-extension.md) | 验证与扩展            | 不变量、并发测试、系统边界          | 完整测试与交付检查   | `stage-5` |
+| [6](docs/stage-06-approval-assistant.md)  | 审批智能助手          | LangGraph、模型适配、RAG 与依据校验 | 五项助手能力与制度库 | `stage-6` |
 
 每章都含阅读顺序、重点、验证命令、练习、常见问题和文件变更清单。源码有职责注释，关键算法和事务有行内解释；JSON 配置见 [配置指南](docs/configuration.md)。
 
-阶段是按依赖关系重组的教学快照，并非对原始开发时间线的逐次记录；早期快照只含截至当章的代码和文档。切换前停止开发服务，先保存自己的学习修改：
+`stage-0` 至 `stage-5` 是按依赖关系重组的教学快照，并非原始开发时间线；`stage-6` 是后续实际增加的助手能力。早期快照只含截至当章的代码和文档。切换前停止开发服务，先保存自己的学习修改：
 
 ```powershell
 git switch --detach stage-2

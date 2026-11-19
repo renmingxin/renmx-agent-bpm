@@ -86,6 +86,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
   const { user, setUser } = useApp();
   const help = useRef<HTMLDialogElement>(null);
   const designer = path.startsWith('/designer');
+  const assistant = path.startsWith('/assistant');
   const isProcesses = path.startsWith('/processes') || designer;
   return (
     <div className={`app-shell ${designer ? 'designer-shell' : ''}`}>
@@ -112,11 +113,11 @@ export function Shell({ children }: { children: React.ReactNode }) {
             href="/"
             aria-label="工作台"
             title="工作台"
-            className={!isProcesses ? 'nav-item active' : 'nav-item'}
+            className={!isProcesses && !assistant ? 'nav-item active' : 'nav-item'}
           >
             <LayoutDashboard size={19} />
             <span>工作台</span>
-            {!isProcesses && <span className="nav-dot" />}
+            {!isProcesses && !assistant && <span className="nav-dot" />}
           </Link>
           <Link
             href="/processes"
@@ -126,6 +127,15 @@ export function Shell({ children }: { children: React.ReactNode }) {
           >
             <GitBranch size={19} />
             <span>流程管理</span>
+          </Link>
+          <Link
+            href="/assistant"
+            aria-label="智能助手"
+            title="智能助手"
+            className={assistant ? 'nav-item active' : 'nav-item'}
+          >
+            <BookOpen size={19} />
+            <span>智能助手</span>
           </Link>
         </nav>
         <div className="sidebar-bottom">
@@ -157,15 +167,17 @@ export function Shell({ children }: { children: React.ReactNode }) {
             <span>工作空间</span>
             <ChevronRight size={14} />
             <strong>
-              {designer
-                ? '流程设计器'
-                : isProcesses
-                  ? '流程管理'
-                  : path.startsWith('/start')
-                    ? '发起申请'
-                    : path.startsWith('/instances')
-                      ? '申请详情'
-                      : '工作台'}
+              {assistant
+                ? '智能助手与制度库'
+                : designer
+                  ? '流程设计器'
+                  : isProcesses
+                    ? '流程管理'
+                    : path.startsWith('/start')
+                      ? '发起申请'
+                      : path.startsWith('/instances')
+                        ? '申请详情'
+                        : '工作台'}
             </strong>
           </div>
           <div className="topbar-right">

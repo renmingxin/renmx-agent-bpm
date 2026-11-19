@@ -30,3 +30,15 @@ JSON 配置必须符合标准语法，不能插入 `//` 或 `/* */` 注释。本
 `DATABASE_URL` 给 API 使用，`API_URL` 给 Next 的代理使用，`POSTGRES_PORT` 给 Compose 的宿主机端口使用。修改端口时必须把这三个位置对应起来；修改数据库密码时也要同步两个数据库 URL。已有数据卷不会因为修改 `POSTGRES_PASSWORD` 自动更新数据库内的密码。
 
 默认开发脚本读取仓库根目录 `.env`。不复制也能用默认端口启动。自定义环境变量后需要重新启动开发进程。
+
+## 智能助手配置补充
+
+- `ASSISTANT_PROVIDER`、`OLLAMA_MODEL`、`OPENAI_MODEL`：新浏览器的默认对话选择；已有本机偏好优先。
+- `OLLAMA_BASE_URL`、`OPENAI_BASE_URL`、`OPENAI_API_KEY`：仅服务端使用。兼容端点需填写包含 `/v1` 的地址。
+- `ASSISTANT_EMBEDDING_PROVIDER`：`keyword` 不调用向量模型，`ollama/openai` 调用独立的 Embedding 模型；对应模型变量见 `.env.example`。
+- `LANGSMITH_TRACING=false`：示例默认不导出业务调用原文。
+- `turbo.json.globalPassThroughEnv`：让通过终端设置的模型/数据库/端口变量传给 dev 子进程；根 `.env` 仍由应用读取。密钥不会作为公开客户端配置返回。
+
+新增依赖 `@langchain/langgraph` 负责助手图，`@langchain/ollama` / `@langchain/openai` 负责模型适配，`@langchain/textsplitters` 负责制度切分，`pdf-parse` / `mammoth` 提取文档正文。版本与安装来源由 `pnpm-lock.yaml` 固定。
+
+完整示例与检索模式说明见 [助手运行指南](agent/setup.md)。

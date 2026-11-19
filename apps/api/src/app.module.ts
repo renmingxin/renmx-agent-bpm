@@ -6,6 +6,13 @@ import { Module } from '@nestjs/common';
 import { BpmController } from './bpm.controller';
 import { BpmService } from './bpm.service';
 import { Store } from './store';
+import { AssistantController } from './assistant/assistant.controller';
+import { AssistantService } from './assistant/assistant.service';
+import { ModelGateway } from './assistant/model-gateway';
+import { PolicyService } from './assistant/policy.service';
 
-@Module({ controllers: [BpmController], providers: [Store, BpmService] })
+@Module({
+  controllers: [BpmController, AssistantController],
+  providers: [Store, BpmService, AssistantService, ModelGateway, PolicyService],
+})
 export class AppModule {}

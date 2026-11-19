@@ -11,12 +11,18 @@ import { resolve } from 'node:path';
 import { loadEnvFile } from 'node:process';
 import { AppModule } from './app.module';
 import { ErrorFilter } from './error.filter';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 
 for (const path of [resolve(process.cwd(), '../../.env'), resolve(process.cwd(), '.env')])
   if (existsSync(path)) loadEnvFile(path);
 
 export async function createApp(options: NestApplicationOptions = {}) {
-  const app = await NestFactory.create(AppModule, { bodyParser: true, ...options });
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    bodyParser: false,
+    ...options,
+  });
+  // 4MB 文件以 base64 上传会膨胀约 1/3；保持有界 JSON 体积，不开放任意大请求。
+  app.useBodyParser('json', { limit: '8mb' });
   app.useGlobalFilters(new ErrorFilter());
   app.enableShutdownHooks();
   return app;

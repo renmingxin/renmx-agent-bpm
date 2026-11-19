@@ -7,14 +7,15 @@
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, Check, CheckCheck, ChevronDown, Clock3, GitBranch, X } from 'lucide-react';
-import { userName, type Instance, type Task } from '@bpm/core';
+import { userName, type Instance, type Task, type FormData as BpmData } from '@bpm/core';
 import { formatDate, json, useApp, useRemote } from '@/lib/client';
 import { collectFields, FormFields } from '../form-fields';
 import { ErrorState, Loading, ProcessIcon, StatusBadge } from '../ui';
 
 import { RoutePreview } from './route-preview';
+import { AssistantPanel } from '../assistant/assistant-panel';
 export function InstanceDetail() {
   const { id } = useParams<{ id: string }>();
   const { user, request, notify } = useApp();
@@ -25,6 +26,13 @@ export function InstanceDetail() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [editing, setEditing] = useState(false);
+  const [candidate, setCandidate] = useState<BpmData | null>(null);
+  const [comment, setComment] = useState('');
+  useEffect(() => {
+    setEditing(false);
+    setCandidate(null);
+    setComment('');
+  }, [id, user.id, data?.instance.updatedAt]);
   if (loading) return <Loading />;
   if (error || !data) return <ErrorState error={error} retry={reload} />;
   const { instance, tasks } = data;
@@ -145,7 +153,10 @@ export function InstanceDetail() {
                   <button
                     type="button"
                     className="text-button"
-                    onClick={() => setEditing(!editing)}
+                    onClick={() => {
+                      setEditing(!editing);
+                      setCandidate(null);
+                    }}
                   >
                     {editing ? '取消修改' : '核对并修改表单'}
                   </button>
@@ -154,9 +165,18 @@ export function InstanceDetail() {
               <div className="application-fields">
                 <FormFields
                   fields={instance.definition.fields}
-                  values={instance.data}
+                  values={editing ? (candidate ?? instance.data) : instance.data}
                   readOnly={!canAct || !editing}
                   prefix="instance"
+                  onValueChange={
+                    canAct && editing
+                      ? (key, value) =>
+                          setCandidate((previous) => ({
+                            ...(previous || instance.data),
+                            [key]: value,
+                          }))
+                      : undefined
+                  }
                 />
               </div>
               {canAct && (
@@ -167,6 +187,8 @@ export function InstanceDetail() {
                       name="_comment"
                       rows={3}
                       maxLength={1000}
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
                       placeholder="留下你的意见，驳回时请说明原因"
                     />
                   </label>
@@ -207,6 +229,21 @@ export function InstanceDetail() {
               )}
             </form>
           </section>
+          <AssistantPanel
+            key={`${instance.id}-${user.id}`}
+            instanceId={instance.id}
+            canDraft={Boolean(canAct)}
+            data={editing ? (candidate ?? instance.data) : instance.data}
+            fields={instance.definition.fields}
+            onDraft={
+              canAct
+                ? (text) => {
+                    setComment(text.slice(0, 1000));
+                    notify('草稿已填入审批意见，请核对后自行提交');
+                  }
+                : undefined
+            }
+          />
           <details className="panel snapshot-panel">
             <summary>
               查看流程快照
