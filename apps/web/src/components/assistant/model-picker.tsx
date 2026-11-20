@@ -8,11 +8,16 @@ import { useEffect, useId, useState } from 'react';
 import { modelChoiceSchema, type AssistantConfig, type ModelChoice } from '@bpm/core';
 import { useRemote } from '@/lib/client';
 
+/**
+ * 模型偏好与业务用户数据分开保存：这里只保存 provider/model，绝不保存密钥或申请内容。
+ * 组件首次取得服务端配置后，以合法的本机偏好覆盖默认值；损坏的 JSON/不合法枚举会回退。
+ */
 export function useModelChoice() {
   const { data: config } = useRemote<AssistantConfig>('/assistant/config');
   const [choice, setChoice] = useState<ModelChoice>({ provider: 'ollama', model: 'qwen3.5:2b' });
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
+    // 只初始化一次，否则刷新配置时可能覆盖用户正在输入的模型名称。
     if (!config || loaded) return;
     let selected = config.defaultModel;
     try {
@@ -26,6 +31,7 @@ export function useModelChoice() {
     setChoice(selected);
     setLoaded(true);
   }, [config, loaded]);
+  /** 允许编辑中的暂时空值留在当前控件，但只把能通过 schema 的完整选择持久化。 */
   function update(next: ModelChoice) {
     setChoice(next);
     // 编辑中的空模型名不持久化，避免下次打开恢复一个不可用选择。
@@ -34,6 +40,11 @@ export function useModelChoice() {
   }
   return { choice, update, config };
 }
+/**
+ * 展示 provider 与可手输的 datalist。选择 provider 后清空旧名称，避免误用另一服务的模型 ID。
+ * required=false 用于路线/纯规则检测：它们不调用模型，因此不应被空模型名阻止。
+ * disabled 作用于整个 fieldset，在请求期间保持当前模型选择稳定。
+ */
 export function ModelPicker({
   choice,
   onChange,
@@ -45,7 +56,9 @@ export function ModelPicker({
   disabled?: boolean;
   required?: boolean;
 }) {
+  // 同一页可能有多个助手实例，useId 保证 input/datalist 关联不会串到别的模型选择器。
   const id = useId();
+  // 切换 provider 后 useRemote 会取消旧发现请求，防止迟到的 Ollama 列表覆盖 OpenAI 列表。
   const { data, loading, reload } = useRemote<{ models: string[]; warning: string }>(
     `/assistant/models/${choice.provider}`,
   );

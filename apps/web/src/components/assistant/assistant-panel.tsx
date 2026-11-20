@@ -12,6 +12,7 @@ import type { AssistantInput, AssistantResult, FormData as BpmData, FormField } 
 import { json, useApp } from '@/lib/client';
 import { ModelPicker, useModelChoice } from './model-picker';
 
+/** 接口 feature 的稳定机器标识映射为界面文字，不把中文展示名发送给后端当作枚举。 */
 const labels = {
   draft: '审批意见草稿',
   route: '路线解释',
@@ -19,6 +20,10 @@ const labels = {
   policy: '制度问答',
   anomalies: '异常字段检测',
 } as const;
+/**
+ * 五种能力的公共交互容器。父页面只提供目标、候选值与采用回调，助手不知道业务提交按钮细节。
+ * 结果允许部分成功：fields 只含有依据的字段，questions/warnings 解释需要补充或跳过的项。
+ */
 export function AssistantPanel({
   instanceId,
   workflowId,
@@ -29,17 +34,26 @@ export function AssistantPanel({
   onDraft,
   policyOnly = false,
 }: {
+  /** 申请详情使用实例目标，服务端从真实申请读取快照和任务。 */
   instanceId?: string;
+  /** 发起前使用流程目标，服务端查找最新发布版本。 */
   workflowId?: string;
+  /** 当前表单值随人工编辑变化，保证生成结果能绑定到本次候选状态。 */
   data?: BpmData;
+  /** 只用于把字段 key 展示为 label；发布定义与授权仍由服务端重新读取。 */
   fields?: FormField[];
+  /** 控制是否展示意见草稿入口，不替代服务端的当前处理人检查。 */
   canDraft?: boolean;
+  /** 人确认候选值后调用；父页面只合并返回的字段，不清空被跳过/未提取的字段。 */
   onFill?: (result: AssistantResult) => void;
+  /** 把草稿放进可编辑意见框，不自动同意或驳回。 */
   onDraft?: (text: string) => void;
+  /** 独立制度库只开放问答，不假装拥有某份申请上下文。 */
   policyOnly?: boolean;
 }) {
   const { request, user } = useApp();
   const { choice, update } = useModelChoice();
+  // 按页面能力选择缺省功能；发起页优先填单，详情页优先确定性路线预览。
   const [feature, setFeature] = useState<AssistantInput['feature']>(
     policyOnly ? 'policy' : onFill ? 'fill' : 'route',
   );
@@ -50,7 +64,9 @@ export function AssistantPanel({
   const [error, setError] = useState('');
   const [result, setResult] = useState<AssistantResult | null>(null);
   const [resultKey, setResultKey] = useState('');
+  // 只取消本组件发起的浏览器请求，不保证服务端/供应商已经停止计算。
   const pending = useRef<AbortController | null>(null);
+  // 回调是否存在描述了父页面能采用哪类结果，避免在只读详情中误展示“自动填单”能力。
   const options = policyOnly
     ? (['policy'] as const)
     : onFill
@@ -58,6 +74,8 @@ export function AssistantPanel({
       : canDraft
         ? (['draft', 'route', 'anomalies', 'policy'] as const)
         : (['route', 'anomalies', 'policy'] as const);
+  // 本机输入身份标识：任何相关值变化都会让旧报告过期。
+  // 这不是后端 inputHash；服务端还要独立核对数据库中的并发变更。
   const contextKey = JSON.stringify({
     instanceId,
     workflowId,
@@ -70,15 +88,18 @@ export function AssistantPanel({
     user: user.id,
   });
   const currentKey = useRef(contextKey);
+  // ref 在异步请求结束时提供最新输入，避免闭包仍拿到请求发出时的旧值。
   currentKey.current = contextKey;
   const stale = Boolean(result && resultKey !== contextKey);
   const needsModel = feature !== 'route' && (feature !== 'anomalies' || semantic);
   useEffect(() => {
+    // 输入改变或组件卸载时放弃旧请求。Abort 不当作用户可见的“调用失败”。
     pending.current?.abort();
     setBusy(false);
     setError('');
     return () => pending.current?.abort();
   }, [contextKey]);
+  /** 原生表单校验通过后发送一次分析请求；捕获本次 key，结果只能写回仍匹配的上下文。 */
   async function generate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
@@ -104,15 +125,19 @@ export function AssistantPanel({
         signal: controller.signal,
       });
       if (!controller.signal.aborted && currentKey.current === key) {
+        // 即使服务端旧响应比新响应晚到，也不能覆盖用户后来编辑或重新生成的内容。
         setResult(output);
         setResultKey(key);
       }
     } catch (e) {
       if (!controller.signal.aborted) setError((e as Error).message);
     } finally {
+      // 已取消的旧请求不能把新请求的 busy 状态改回 false。
       if (!controller.signal.aborted) setBusy(false);
     }
   }
+  // 渲染顺序：功能选择 → 模型/问题 → 显式生成 → 主体回答 → 规则/路线/候选/来源 → 人工采用。
+  // 助手 form 位于父页面业务 form 外面；所有采用按钮都用 type=button，防止误提交审批。
   return (
     <section className="panel assistant-panel">
       <div className="assistant-heading">

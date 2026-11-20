@@ -18,7 +18,6 @@ import {
   detectFieldAnomalies,
   explainRoute,
   shanghaiToday,
-  validateForm,
   definitionSignature,
   locateEvidence,
   type AssistantInput,
@@ -34,38 +33,61 @@ import { ModelGateway } from './model-gateway';
 import { PolicyService } from './policy.service';
 import { outputSchema } from './output-schema';
 import { fillPrompt, draftPrompt, anomalyPrompt, policyPrompt } from './prompts';
+import { validateFillProposal } from './fill-validation';
 
+/** 从真实业务数据读取的授权上下文，不能用模型返回的“身份/流程定义”替代。 */
 interface Context {
+  /** 已发起申请使用实例快照；发起前使用模板最新发布版本。 */
   definition?: Definition;
+  /** 当前保存值或被授权的候选表单。 */
   data: FormData;
+  /** 仅申请详情场景存在，用来提供真实历史与当前状态。 */
   instance?: Instance;
+  /** 与该实例关联的待办/已办，既用于权限判断，也属于并发变更检查的输入。 */
   tasks: Task[];
+  /** 授权主体 + 业务快照 + 请求参数的哈希；模型无法自行声明分析结果“仍有效”。 */
   fingerprint: string;
+  /** 本次上海业务日期，供相对日期提取与未来发生日规则使用。 */
   today: string;
 }
+/**
+ * LangGraph 每次 invoke 都拥有独立 state，各节点只返回本节点更新的字段。
+ * Annotation 负责描述通道类型；HTTP/schema 与输出业务校验仍是另一层责任。
+ */
 const State = Annotation.Root({
+  /** 已通过请求 schema 规范化的参数。 */
   input: Annotation<AssistantInput>(),
+  /** 由接口校验后传入的操作者，不能信任模型提出的 userId。 */
   actor: Annotation<string>(),
+  /** prepare 节点读取的真实上下文。 */
   context: Annotation<Context>(),
+  /** retrieve 节点命中的制度片段。 */
   sources: Annotation<PolicySource[]>(),
+  /** 模型或确定性分支的原始 JSON，故意保持 unknown，不能跳过后验校验。 */
   generated: Annotation<unknown>(),
+  /** 可信元数据与经过核验的生成内容组成的公共结果壳。 */
   result: Annotation<AssistantResult>(),
 });
 
 @Injectable()
 export class AssistantService {
+  /** 进程内限流计数：限制昂贵模型调用。多实例部署时应替换成共享限流。 */
   private active = new Map<string, number>();
+  /** 编译后的图可复用，具体请求状态通过 invoke 单独传入，不保存在共享成员中。 */
   private readonly graph;
+  /** 注册节点并编译编排图；构造时不会请求模型，也不会提前读取任何申请。 */
   constructor(
     @Inject(BpmService) private readonly bpm: BpmService,
     @Inject(ModelGateway) readonly model: ModelGateway,
     @Inject(PolicyService) readonly policies: PolicyService,
   ) {
     this.graph = new StateGraph(State)
+      // 1. 服务端读取申请/模板并授权，不接受浏览器或模型自带的流程定义作为事实。
       .addNode('prepare', async (state) => ({
         context: await this.context(state.input, state.actor),
       }))
       .addNode('rules', (state) => {
+        // 2. 先由代码提供规则结果与路线，模型只能参考，不能重算后改写执行语义。
         const ctx = state.context;
         const result: AssistantResult = {
           id: `ai_${randomUUID()}`,
@@ -92,6 +114,7 @@ export class AssistantService {
         return { result };
       })
       .addNode('retrieve', async (state) => {
+        // 3. 只为需要制度的功能检索；填单、路线及纯规则检测不应为无关的 RAG 失败而失败。
         if (
           state.input.feature === 'route' ||
           state.input.feature === 'fill' ||
@@ -117,6 +140,7 @@ export class AssistantService {
         };
       })
       .addNode('generate', async (state, config) => {
+        // 4. 确定性结果直接回答；制度没有命中时明确缺证据，不请求模型“补一个答案”。
         if (state.input.feature === 'route')
           return {
             generated: {
@@ -133,6 +157,8 @@ export class AssistantService {
           };
         const choice = state.input.model || this.model.config().defaultModel;
         try {
+          // 填单只传字段定义与原文，避免小模型把当前空表单误解为“原文什么也没有”。
+          // 其他分支也只传所需的定义元信息，不把整个图交给模型自行决定下一节点。
           const payload =
             state.input.feature === 'fill'
               ? {
@@ -194,6 +220,7 @@ export class AssistantService {
         }
       })
       .addNode('validate', async (state) => {
+        // 5. unknown → 结构校验 → 来源/字段核验 → 快照复查 → 保存建议，顺序不能倒置。
         const parsed = outputSchema.safeParse(state.generated);
         if (!parsed.success)
           throw new BadGatewayException('模型结果不符合助手数据协议，请更换支持 JSON 的模型或重试');
@@ -213,6 +240,7 @@ export class AssistantService {
           steps: [...state.result.steps, '校验结构、引用与输入版本'],
         };
         if (state.input.feature === 'draft' && state.context.definition) {
+          // 防止模型在低金额路径中捏造“进入财务”等不属于当前引擎模拟的节点。
           const allowed = new Set(state.result.route.map((step) => step.nodeId));
           const invalidNode = state.context.definition.nodes.find(
             (node) =>
@@ -246,45 +274,21 @@ export class AssistantService {
           }
         }
         if (state.input.feature === 'fill') {
-          // 对已知说明字段补充显式“，用于…”短语，只复制原文，不推断未提供的用途。
-          const purpose = state.input.text.match(
-            /(?:^|[，,。；;\n])(?:用于|用途为)([^。；;\n]{2,300})/,
+          // 一项候选无依据时只跳过该项。原有全量 throw 会让 Qwen 的一条错误依据拖垮整份填单。
+          const checked = validateFillProposal(
+            state.context.definition!.fields,
+            state.input.text,
+            out,
+            state.context.today,
           );
-          if (
-            !out.fields.reason &&
-            purpose &&
-            state.context.definition!.fields.some((field) => field.key === 'reason')
-          ) {
-            out.fields.reason = purpose[1].trim();
-            out.fieldEvidence.reason = purpose[0].replace(/^[，,。；;\n]/, '');
-          }
-          for (const [key, value] of Object.entries(out.fields)) {
-            if (String(value).trim() === '') continue;
-            const field = state.context.definition?.fields.find((f) => f.key === key);
-            const quote = locateEvidence(state.input.text, out.fieldEvidence[key] || '');
-            if (!field || !quote)
-              throw new BadGatewayException('填单结果缺少有效字段或原文依据，结果已拦截');
-            try {
-              if (
-                field.type === 'number' &&
-                !(quote.match(/[+-]?\d[\d,]*(?:\.\d+)?/g) || []).some(
-                  (n) => Number(n.replaceAll(',', '')) === Number(value),
-                )
-              ) {
-                result.questions.push(`「${field.label}」的数字未能与原文核对，请手动填写`);
-                continue;
-              }
-              result.fields[key] = validateForm([{ ...field, required: true }], { [key]: value })[
-                key
-              ];
-              result.fieldEvidence[key] = quote;
-            } catch {
-              result.questions.push(`「${field.label}」提取值不合法，请手动确认`);
-            }
-          }
-          for (const f of state.context.definition!.fields)
-            if (f.required && result.fields[f.key] === undefined)
-              result.questions.push(`请确认「${f.label}」`);
+          result.fields = checked.fields;
+          result.fieldEvidence = checked.fieldEvidence;
+          result.questions = checked.questions;
+          result.warnings.push(...checked.warnings);
+          const count = Object.keys(checked.fields).length;
+          result.text = count
+            ? `已提取 ${count} 个有原文依据的候选字段，请核对后填入；其余信息见待确认事项。`
+            : '本次没有可核验的候选字段，请补充明确的信息或手动填写；未将缺少依据的内容填入表单。';
           result.title = out.title;
         }
         if (state.input.feature === 'anomalies')
@@ -315,6 +319,7 @@ export class AssistantService {
         if (fresh.fingerprint !== state.context.fingerprint)
           throw new ConflictException('申请或流程版本已变化，请刷新后重新生成');
         const docs = await this.policies.list();
+        // 生成期间制度可能被停用或出现新的适用版本，业务快照没变也要独立检查来源新鲜度。
         const at =
           typeof state.context.data.date === 'string' &&
           /^\d{4}-\d{2}-\d{2}$/.test(state.context.data.date)
@@ -336,9 +341,11 @@ export class AssistantService {
           })
         )
           throw new ConflictException('引用制度已停用或有新的适用版本，请重新生成');
+        // 只有全部核验完成才保存；这里仍没有调用 bpm.act/start 等业务写入入口。
         await this.policies.saveReport(state.actor, result);
         return { result };
       })
+      // 当前是单向、有限步骤编排，没有自由工具循环；显式边使每一步的先后容易阅读与测试。
       .addEdge(START, 'prepare')
       .addEdge('prepare', 'rules')
       .addEdge('rules', 'retrieve')
@@ -347,6 +354,10 @@ export class AssistantService {
       .addEdge('validate', END)
       .compile();
   }
+  /**
+   * 加载并校验上下文，生成前后都会调用，用于发现并发审批/发布等变化。
+   * instanceId 优先于 workflowId；只有独立制度问答允许没有具体业务目标。
+   */
   private async context(input: AssistantInput, actor: string): Promise<Context> {
     let definition: Definition | undefined;
     let instance: Instance | undefined;
@@ -356,6 +367,7 @@ export class AssistantService {
       ({ instance, tasks } = await this.bpm.instance(input.instanceId));
       if (instance!.applicant !== actor && !tasks.some((task) => task.assignee === actor))
         throw new ForbiddenException('你不能读取此申请的助手上下文');
+      // 参与人可读不等于当前可审批：起草意见和提交候选覆盖值还要检查当前 pending 处理人。
       const pending = tasks.find((task) => task.status === 'pending');
       if (input.feature === 'draft' && pending?.assignee !== actor)
         throw new ForbiddenException('仅当前待办处理人可生成审批意见');
@@ -382,6 +394,8 @@ export class AssistantService {
       Object.keys(input.data).some((key) => !definition!.fields.some((f) => f.key === key))
     )
       throw new BadRequestException('候选表单包含未定义字段');
+    // 同一用户、相同实例/任务/定义/候选值及请求，才可能具有相同输入指纹。
+    // 它用于变更检测，不是数字签名；权限检查仍在每次读取时执行。
     const fingerprint = createHash('sha256')
       .update(
         JSON.stringify({
@@ -396,6 +410,10 @@ export class AssistantService {
       .digest('hex');
     return { definition, data, instance, tasks, fingerprint, today: shanghaiToday() };
   }
+  /**
+   * 单次分析入口：先占并发额度，再执行图，最后无论成功或异常都归还额度。
+   * 每人最多 2 个、进程最多 6 个分析；65 秒是整个图的预算，不是每个节点各有 65 秒。
+   */
   async run(input: AssistantInput, actor: string) {
     const total = [...this.active.values()].reduce((s, n) => s + n, 0);
     if ((this.active.get(actor) || 0) >= 2 || total >= 6)
@@ -410,6 +428,7 @@ export class AssistantService {
         throw new HttpException('助手分析超时，请缩短输入或更换模型。人工审批仍可使用', 504);
       throw error;
     } finally {
+      // 不释放失败请求会造成“模型曾失败一次，用户此后一直被限流”的计数泄漏。
       const active = (this.active.get(actor) || 1) - 1;
       if (active) this.active.set(actor, active);
       else this.active.delete(actor);

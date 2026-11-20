@@ -100,14 +100,41 @@ test('fill validates field keys, values and exact evidence, never starts an inst
   assert(result.questions.some((q) => q.includes('日期')));
   assert.equal((await store.all('instances')).length, 1);
   model.answer = { text: '虚构', fields: { amount: 999 }, fieldEvidence: { amount: '原文不存在' } };
-  await assert.rejects(
-    () =>
-      service.run(
-        request({ feature: 'fill', workflowId: workflow.id, text: '差旅420元' }),
-        'u-lin',
-      ),
-    /原文依据/,
+  const unsupported = await service.run(
+    request({ feature: 'fill', workflowId: workflow.id, text: '差旅420元' }),
+    'u-lin',
   );
+  assert.equal(unsupported.fields.amount, undefined, '无依据金额仍不可填入');
+  assert(unsupported.questions.some((q) => q.includes('数字无法与原文核对')));
+  assert(unsupported.text.includes('没有可核验的候选字段'));
+});
+
+test('Qwen-style evidence explanations return grounded partial fields instead of failing the entire form', async (t) => {
+  const { service, model, workflow, store } = await fixture(t);
+  model.answer = {
+    text: '提取完成',
+    fields: { amount: 420, category: '差旅交通', date: '2026-11-18', reason: '项目交付' },
+    fieldEvidence: {
+      amount: '用户输入的金额数字',
+      category: '选项列表第一个值',
+      date: '发生日期：2026-11-18',
+      reason: '用途说明',
+    },
+  };
+  const result = await service.run(
+    request({
+      feature: 'fill',
+      workflowId: workflow.id,
+      text: '2026年11月18日打车420元，用于项目交付。',
+    }),
+    'u-lin',
+  );
+  assert.equal(result.fields.amount, 420);
+  assert.equal(result.fields.date, '2026-11-18');
+  assert.equal(result.fieldEvidence.date, '2026年11月18日');
+  assert.equal(result.fields.category, undefined, '不能捏造选项依据');
+  assert(result.questions.some((q) => q.includes('报销类型')));
+  assert.equal((await store.all('instances')).length, 1, '候选生成不提交申请');
 });
 test('draft requires current assignee and persists advice without approving', async (t) => {
   const { service, model, instance, store } = await fixture(t);

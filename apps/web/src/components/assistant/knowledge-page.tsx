@@ -10,16 +10,23 @@ import type { AssistantConfig, PolicyDocument } from '@bpm/core';
 import { json, useApp, useRemote } from '@/lib/client';
 import { AssistantPanel } from './assistant-panel';
 
+/** 制度管理与问答并列展示；每次写操作成功后重新读取服务端，避免靠前端猜测索引状态。 */
 export function KnowledgePage() {
   const { user, request, notify } = useApp();
   const { data: docs, loading, error, reload } = useRemote<PolicyDocument[]>('/assistant/policies');
   const { data: config } = useRemote<AssistantConfig>('/assistant/config');
   const [busy, setBusy] = useState(false);
   const [actionError, setError] = useState('');
+  // 这里只控制管理表单是否显示；Controller 对导入/启停还会再次检查角色。
   const canEdit = user.id === 'u-chen' || user.id === 'u-wang';
+  /**
+   * 读取原生表单 → 本机检查大小/是否提供内容 → 文件转 Base64 → 请求服务端解析和建索引。
+   * 浏览器通过不代表服务端通过；文件类型、解码字节和正文等限制仍在 API 中复核。
+   */
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
+    // 在 await 之前捕获 DOM 表单，后面需要读取字段并在成功后 reset。
     const form = event.currentTarget;
     const fields = new FormData(form);
     const file = fields.get('file') as File;
@@ -38,6 +45,7 @@ export function KnowledgePage() {
           binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
         uploaded = { name: file.name, base64: btoa(binary) };
       }
+      // 有文件就优先上传文件；没有文件时才传粘贴正文，与后端的优先级保持一致。
       await request(
         '/assistant/policies',
         json('POST', {
@@ -50,6 +58,7 @@ export function KnowledgePage() {
         }),
       );
       notify('制度已导入并完成索引');
+      // 只有 API 确认解析/向量化/保存成功后，才清空输入，失败时保留内容供用户修改。
       form.reset();
       reload();
     } catch (e) {
@@ -58,6 +67,7 @@ export function KnowledgePage() {
       setBusy(false);
     }
   }
+  /** 可恢复启停，不删除历史版本；采用服务器返回后的重取结果，不乐观伪造成功状态。 */
   async function toggle(doc: PolicyDocument) {
     setBusy(true);
     setError('');
@@ -71,6 +81,7 @@ export function KnowledgePage() {
       setBusy(false);
     }
   }
+  // 页面只有独立制度问答上下文，不会把用户任意选择的实例隐式交给助手。
   return (
     <>
       <div className="page-heading">

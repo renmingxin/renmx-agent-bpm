@@ -22,9 +22,11 @@ export function StartProcess() {
   const { data: wf, error, loading, reload } = useRemote<Workflow>(`/workflows/${id}`);
   const [busy, setBusy] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  // 人工输入与 AI 采用值共用这一份候选状态；真正的提交仍由下方 submit 收集原生表单执行。
   const [draft, setDraft] = useState<BpmData>({});
   const [draftTitle, setDraftTitle] = useState<string | null>(null);
   useEffect(() => {
+    // 换流程或身份时清理尚未提交的候选，避免上一份申请/上一人的输入残留。
     setDraft({});
     setDraftTitle(null);
     setSubmitError('');
@@ -145,6 +147,7 @@ export function StartProcess() {
             data={draft}
             fields={definition.fields}
             onFill={(result) => {
+              // 只合并通过服务端核验的字段；未提取/缺证据的项保留用户原先已输入的值。
               setDraft((previous) => ({ ...previous, ...result.fields }));
               if (result.title) setDraftTitle(result.title);
               notify('候选字段已填入，请核对后再提交申请');

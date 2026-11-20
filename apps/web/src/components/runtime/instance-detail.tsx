@@ -26,9 +26,12 @@ export function InstanceDetail() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState('');
   const [editing, setEditing] = useState(false);
+  // candidate 只表示本页待核对的改动；取消修改就回到 instance.data，不会提前写回数据库。
   const [candidate, setCandidate] = useState<BpmData | null>(null);
+  // AI 草稿与人工意见共用可编辑值，采用草稿不会触发 submit。
   const [comment, setComment] = useState('');
   useEffect(() => {
+    // 切换申请、用户，或审批后读到新版本时，旧候选和旧草稿都不能继续冒充当前输入。
     setEditing(false);
     setCandidate(null);
     setComment('');

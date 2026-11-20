@@ -7,5 +7,6 @@ dist/
 # 本地连接配置、旧开发数据与截图/临时脚本不进入仓库。
 .env
 .env.local
+.env.example
 data/
 artifacts/
