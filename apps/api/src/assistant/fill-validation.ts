@@ -8,23 +8,32 @@
 import { locateEvidence, validateForm, type FormField, type FormData } from '@bpm/core';
 
 interface FillProposal {
+  /** 模型提取的候选值；此时尚未通过字段白名单、类型和原文依据核对。 */
   fields: FormData;
+  /** 候选值对应的摘录，可能是模型误写的解释，不能直接作为已验证证据。 */
   fieldEvidence: Record<string, string>;
+  /** 模型提出的待确认项；确定性校验会追加缺项，最后统一去重。 */
   questions: string[];
 }
 
 /** 规范化字符在原字符串中的区间，用于将全角数字等匹配结果恢复为真实原文。 */
 interface NormalizedText {
+  /** 用于查找的 NFKC 规范化文本，可能与原文的字符长度不同。 */
   text: string;
+  /** 每个规范化 UTF-16 位置所对应的原文起点/终点；用于恢复真实摘录。 */
   starts: number[];
   ends: number[];
   source: string;
 }
+/** 一次可核验的数字或日期出现位置；同一值可能在原文中出现多次。 */
 interface Mention {
+  /** 供字段值比较使用的规范值，例如日期 YYYY-MM-DD 或已换算单位的金额。 */
   value: string | number;
+  /** 原文摘录与半开区间 [start, end)，不是规范化后重新生成的字符串。 */
   quote: string;
   start: number;
   end: number;
+  /** 原文只写月日时标记，返回候选值的同时要求用户确认推定年份。 */
   inferredYear?: boolean;
 }
 
@@ -129,7 +138,7 @@ function datesIn(text: string, today: string): Mention[] {
 
 /** 给原生解码提供可证明的日期候选；小模型只能从原文日期及确定性换算结果中选择。 */
 export function fillDateCandidates(text: string, today: string): string[] {
-  return [...new Set(datesIn(text, today).map(mention => String(mention.value)))];
+  return [...new Set(datesIn(text, today).map((mention) => String(mention.value)))];
 }
 
 /** 数字按完整 token 匹配，避免把 1420 中的 420 当成依据；支持千分位、小数和明确的万/千单位。 */

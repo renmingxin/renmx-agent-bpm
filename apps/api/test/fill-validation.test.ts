@@ -100,9 +100,26 @@ test('native decoding restricts evidence keys and values to actual source spans'
     schema.safeParse({ text: '提取完成', fields: { amount: 420 }, fieldEvidence: { amount: text } })
       .success,
   );
-  const dated = decodingSchema({ feature: 'fill', schema: fields, userText: text, todayShanghai: '2026-11-20' });
-  assert(dated.safeParse({ text: '提取完成', fields: { date: '2026-11-19' }, fieldEvidence: { date: text } }).success);
-  assert(!dated.safeParse({ text: '错误年份', fields: { date: '2025-11-19' }, fieldEvidence: { date: text } }).success);
+  const dated = decodingSchema({
+    feature: 'fill',
+    schema: fields,
+    userText: text,
+    todayShanghai: '2026-11-20',
+  });
+  assert(
+    dated.safeParse({
+      text: '提取完成',
+      fields: { date: '2026-11-19' },
+      fieldEvidence: { date: text },
+    }).success,
+  );
+  assert(
+    !dated.safeParse({
+      text: '错误年份',
+      fields: { date: '2025-11-19' },
+      fieldEvidence: { date: text },
+    }).success,
+  );
   assert(
     !schema.safeParse({
       text: '提取完成',
@@ -120,5 +137,8 @@ test('native decoding restricts evidence keys and values to actual source spans'
   const long = '申请说明。'.repeat(400) + '最后的独特用途：客户项目验收交付。';
   const candidates = fillEvidenceCandidates(long).filter(Boolean);
   assert(candidates.every((chunk) => chunk.length <= 1000 && long.includes(chunk)));
-  assert(candidates.some(chunk => chunk.includes('最后的独特用途：客户项目验收交付')), '不能只保留长原文开头而漏掉末尾事实');
+  assert(
+    candidates.some((chunk) => chunk.includes('最后的独特用途：客户项目验收交付')),
+    '不能只保留长原文开头而漏掉末尾事实',
+  );
 });

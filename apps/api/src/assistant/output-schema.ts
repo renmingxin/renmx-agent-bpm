@@ -50,8 +50,10 @@ export function decodingSchema(context: unknown) {
   const noItems = z.array(z.string()).max(0).default([]);
   if (input.feature === 'fill') {
     // 相对日期由代码按上海“今天”换算，避免小模型给“昨天”套用训练数据中的旧年份。
-    const dates = input.todayShanghai && /^\d{4}-\d{2}-\d{2}$/.test(input.todayShanghai)
-      ? fillDateCandidates(input.userText || '', input.todayShanghai) : [];
+    const dates =
+      input.todayShanghai && /^\d{4}-\d{2}-\d{2}$/.test(input.todayShanghai)
+        ? fillDateCandidates(input.userText || '', input.todayShanghai)
+        : [];
     // 填单只能生成已发布表单中的 key；选项字段直接使用原 options 枚举。
     const fields = z
       .object(
@@ -60,11 +62,11 @@ export function decodingSchema(context: unknown) {
             f.key,
             (f.type === 'number'
               ? z.number()
-                : f.type === 'date' && dates.length
-                  ? z.enum(dates as [string, ...string[]])
+              : f.type === 'date' && dates.length
+                ? z.enum(dates as [string, ...string[]])
                 : f.type === 'select' && f.options?.length
-                ? z.enum(f.options as [string, ...string[]])
-                : z.string()
+                  ? z.enum(f.options as [string, ...string[]])
+                  : z.string()
             )
               .describe(f.label)
               .optional(),

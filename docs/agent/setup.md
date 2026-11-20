@@ -58,7 +58,21 @@ OPENAI_API_KEY=ollama
 
 修改 `.env` 后重启 `pnpm dev`。页面仍可切换两个 provider，并输入各自任意已部署模型名；`ASSISTANT_PROVIDER` 只是没有本地偏好时的默认值。
 
-兼容端点不一定实现 `/models`。列表失败时可以手动输入。模型应能生成遵守指令的 JSON；很小的模型也可能漏字段、误解制度或把摘录格式写错。格式/依据校验失败会显示错误，不会因此批准或驳回业务。
+兼容端点不一定实现 `/models`。列表失败时可以手动输入。模型应能生成遵守指令的 JSON；很小的模型也可能漏字段、误解制度或把摘录格式写错。填单会逐字段核对，保留能回溯原文的候选值，其余列为待确认；整体 JSON 无法解析或模型连接失败仍会显示错误。
+
+### 填单提示“缺少有效字段或原文依据”怎么办
+
+旧版会在任意字段的依据不正确时拦截整份结果。例如 `qwen3.5:2b` 提取出金额 `420`，却把 `fieldEvidence.amount` 写成“用户输入的金额数字”；这句话没有出现在申请描述中，因此被拒绝。把“昨天”直接改写成 ISO 日期作为引文，也会遇到同样问题。
+
+当前实现分三步处理：
+
+1. Ollama 的原生 schema 将依据限制为真实输入片段；能明确解析的日期也限制在按上海日期换算的候选集中。
+2. 服务端重新校验每个字段。金额按完整数字核对，支持千分位、全角数字和明确单位；日期对应原文中的具体日期或“昨天”等表达。模型写成说明文字时，可以从真实输入重新定位同值依据。
+3. 无法核对的字段单独跳过，其他有效字段继续返回；缺项和推定年份展示为待确认。全部无法核对时返回空候选和补充提示，不自动填入默认值。
+
+例如“昨天差旅交通费420元，用于项目交付。”在上海日期为 `2026-11-20` 时，日期候选应为 `2026-11-19`，日期依据仍是“昨天”。错误金额 `999`、从 `1420` 中截取的 `420`、错误年份都不能通过该修复。
+
+此处只核验提取来源，不能证明分类理解、费用真实性或制度合规；采纳前仍需核对。开发模式保存后等待 API 重载，再重新生成；使用构建产物启动时，执行 `pnpm build` 并重启服务。
 
 ## 3. RAG 检索：关键词或向量混合
 
@@ -140,6 +154,6 @@ PostgreSQL 新增 `assistant_policies` 与 `assistant_reports`，前者保存版
 
 ## 7. 接着读代码
 
-先看 [stage-6 学习文档](../stage-06-approval-assistant.md)。其中按调用链给出阅读顺序、关键取舍、练习与验证方式。
+先看 [stage-6 学习文档](../stage-06-approval-assistant.md)。其中按调用链给出阅读顺序、关键取舍、练习与验证方式。当前填单修复新增的 `apps/api/src/assistant/fill-validation.ts` 建议放在 `output-schema.ts` 之后阅读：先理解生成约束，再理解逐字段核对、依据恢复和部分结果。
 
 实现参考了 [LangGraph Graph API](https://docs.langchain.com/oss/javascript/langgraph/graph-api)、[ChatOllama](https://docs.langchain.com/oss/javascript/integrations/chat/ollama) 与 [ChatOpenAI](https://docs.langchain.com/oss/javascript/integrations/chat/openai) 官方文档；具体配置以本工程锁定的依赖与类型检查为准。

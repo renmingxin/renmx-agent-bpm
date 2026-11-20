@@ -19,6 +19,7 @@ import { PolicyService, cosine } from '../src/assistant/policy.service';
 import { AssistantService } from '../src/assistant/assistant.service';
 import { createApp } from '../src/main';
 
+/** 固定生成结果以稳定覆盖校验边界；effect 可在生成途中改变业务状态，复现过期响应。 */
 class FakeModel extends ModelGateway {
   calls = 0;
   answer: unknown = { text: '建议核对后处理。' };
@@ -35,6 +36,10 @@ class FakeModel extends ModelGateway {
     return this.answer;
   }
 }
+/**
+ * 每例重建独立测试库的数据与真实 Service，只有模型生成被替换。
+ * 先检查库名再执行 TRUNCATE，禁止把演示库/业务库作为测试目标；用例按文件串行执行。
+ */
 async function fixture(t: TestContext) {
   const url =
     process.env.TEST_DATABASE_URL || 'postgresql://bpm:bpm_dev_password@127.0.0.1:5440/bpm_test';

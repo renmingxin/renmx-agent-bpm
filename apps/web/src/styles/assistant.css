@@ -60,6 +60,7 @@
   border-color: #6c83df;
   color: #334eb6;
 }
+/* provider 和模型名共同组成一次调用选择；控件允许换行以容纳手工输入的长名称。 */
 .model-picker {
   border: 1px solid #dbe1ed;
   background: #fafbfe;
@@ -122,6 +123,7 @@
 .assistant-run small {
   flex: 1 1 180px;
 }
+/* 结果只在下方独立展示，过期提示保留文字标签，避免仅靠颜色表达有效状态。 */
 .assistant-result {
   margin-block-start: 20px;
   padding-block-start: 18px;
@@ -155,6 +157,7 @@
   border-radius: 8px;
   color: #825c25;
 }
+/* 异常提示保留来源、原文和说明；这些视觉提示不表示已经驳回申请。 */
 .assistant-findings {
   list-style: none;
   padding: 0;
@@ -187,6 +190,7 @@
 .assistant-route p {
   color: #67738b;
 }
+/* 字段候选以“字段名/值/原文依据”分行展示，填入动作由组件中的显式按钮触发。 */
 .assistant-candidates {
   display: grid;
   gap: 8px;
@@ -208,6 +212,7 @@
   margin-block: 15px;
   color: #775620;
 }
+/* 制度引用默认折叠，长片段独立滚动；保留换行方便用户逐段核对来源。 */
 .assistant-sources {
   margin-block: 18px;
 }
@@ -241,6 +246,7 @@
 .assistant-trace summary {
   cursor: pointer;
 }
+/* 制度管理和问答在宽屏并排，窄屏在下方媒体查询中改为单列。 */
 .knowledge-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -286,6 +292,7 @@
   color: #68758c;
   padding-block: 20px;
 }
+/* 等待动画尊重系统的减少动态效果偏好，状态含义仍由按钮文字传达。 */
 .spin {
   animation: assistant-spin 1s linear infinite;
 }
