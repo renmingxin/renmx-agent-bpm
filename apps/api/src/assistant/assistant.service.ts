@@ -194,7 +194,7 @@ export class AssistantService {
                   ? anomalyPrompt
                   : policyPrompt,
             payload,
-            config.signal || AbortSignal.timeout(60000),
+            config.signal || AbortSignal.timeout(180000),
           );
           return {
             generated,
@@ -419,7 +419,7 @@ export class AssistantService {
     if ((this.active.get(actor) || 0) >= 2 || total >= 6)
       throw new HttpException('助手正在处理其他请求，请稍后重试', 429);
     this.active.set(actor, (this.active.get(actor) || 0) + 1);
-    const signal = AbortSignal.timeout(65000);
+    const signal = AbortSignal.timeout(180000);
     try {
       const state = await this.graph.invoke({ input, actor }, { signal, recursionLimit: 10 });
       return state.result;

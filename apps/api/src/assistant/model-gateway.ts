@@ -45,7 +45,7 @@ export class ModelGateway {
   defaultModel(provider: ModelChoice['provider']) {
     return provider === 'ollama'
       ? process.env.OLLAMA_MODEL || 'qwen3.5:2b'
-      : process.env.OPENAI_MODEL || 'gpt-4o-mini';
+      : process.env.OPENAI_MODEL || 'deepseek-v4.1-flash';
   }
   /** 连接地址只来自服务端环境；去掉末尾斜杠，避免拼接 /models 等路径时出现双斜杠。 */
   baseUrl(provider: ModelChoice['provider']) {
@@ -134,7 +134,7 @@ export class ModelGateway {
             useResponsesApi: false,
             // 兼容端点走 Chat Completions；不假定所有服务都支持供应商专用的 Schema 参数。
             maxRetries: 0,
-            timeout: 60000,
+            timeout: 180000,
             maxTokens: 2400,
           });
     try {

@@ -1,0 +1,37 @@
+{
+  // 调试配置：API 与 Web 使用不同 inspector 端口，可同时启动互不冲突。
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "API (NestJS + tsx)",
+      // 在 apps/api 下启动，main.ts 会自动加载根目录 .env。
+      "cwd": "${workspaceFolder}/apps/api",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "tsx", "watch", "--inspect=9229", "src/main.ts"],
+      "console": "integratedTerminal",
+      // tsx watch 因文件改动重启后自动重新附加调试器。
+      "restart": true,
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Web (Next.js)",
+      "cwd": "${workspaceFolder}/apps/web",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["exec", "next", "dev", "--inspect=9230", "--hostname", "127.0.0.1"],
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"]
+    }
+  ],
+  "compounds": [
+    {
+      "name": "API + Web",
+      "configurations": ["API (NestJS + tsx)", "Web (Next.js)"],
+      // 任一进程结束时不连带停掉另一个，便于单独排查。
+      "stopAll": false
+    }
+  ]
+}

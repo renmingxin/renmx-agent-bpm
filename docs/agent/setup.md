@@ -156,4 +156,6 @@ PostgreSQL 新增 `assistant_policies` 与 `assistant_reports`，前者保存版
 
 先看 [stage-6 学习文档](../stage-06-approval-assistant.md)。其中按调用链给出阅读顺序、关键取舍、练习与验证方式。当前填单修复新增的 `apps/api/src/assistant/fill-validation.ts` 建议放在 `output-schema.ts` 之后阅读：先理解生成约束，再理解逐字段核对、依据恢复和部分结果。
 
+第一次学习这些概念时，改从 [零基础链路课程](learning/README.md) 开始。五项能力分别有独立文章，先看基础篇与无需模型的路线解释，再逐步理解模型生成、字段依据、RAG 和语义检测。
+
 实现参考了 [LangGraph Graph API](https://docs.langchain.com/oss/javascript/langgraph/graph-api)、[ChatOllama](https://docs.langchain.com/oss/javascript/integrations/chat/ollama) 与 [ChatOpenAI](https://docs.langchain.com/oss/javascript/integrations/chat/openai) 官方文档；具体配置以本工程锁定的依赖与类型检查为准。

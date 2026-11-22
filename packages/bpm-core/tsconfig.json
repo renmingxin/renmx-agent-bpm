@@ -5,7 +5,10 @@
     "moduleResolution": "Node",
     "rootDir": "src",
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    // 调试 API 时把 dist/*.js 映射回 src/*.ts，断点才能落在源码上。
+    "sourceMap": true,
+    "inlineSources": true
   },
   "include": ["src/**/*.ts"]
 }
